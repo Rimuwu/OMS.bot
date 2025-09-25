@@ -1,0 +1,75 @@
+{
+
+    "user-task": {
+        "settings": {
+            "worker-class": "some_worker_class", // Основной класс работы со сценой
+            "data-getter": { // Функция для запроса данных. Вызывается при открытии страницы
+                // "function": "some_data_getter.functionname",
+                "return": [ // Список возвращаемых полей для установки данных
+                    "tsk_id",
+                    "channels" // Список каналов для отправки
+                ]
+            },
+            "data-setter": { // Функция для установки данных. Внутренняя функция для взаимодействия с внешними данными
+                // "function": "some_data_setter.functionname",
+                "arguments": [ // Список ОБЯЗАТЕЛЬНЫХ аргументов для передачи в функцию
+                    "tsk_id"
+                ]
+            },
+            "state": "path.to.state.class" 
+        },
+        "pages": {
+            "main-page": { // Название страницы
+                "title": "Главная страница",
+                "content": "Описание задачи и тд...",
+                "to_pages": { // Кнопки для перехода на другие страницы
+                    "channels-settings": "Каналы для отправки" // id страницы: Название кнопки
+                },
+                "content-worker": { // Функция генерация контента и переменных. Вызывается при открытии страницы
+                    "function": "some_content_worker.functionname",
+                    "arguments": ["content"]
+                    // Первым аргументом будет идти content: str даже если его не указывать
+                    // Указать content - лишь хороший тон
+                },
+                "buttons-worker": { // Функция для генерации кнопок. Вызывается при открытии страницы
+                    "function": "some_buttons_worker.functionname",
+                    "arguments": ["buttons"]
+                    // Первым аргументом будет идти buttons: dict даже если его не указывать
+                    // Указать buttons - лишь хороший тон
+                }
+            },
+            "channels-settings": {
+                "title": "Настройка каналов для отправки",
+                "content": "Выберите каналы для отправки: {channels}",
+                "to_pages": {
+                    "main-page": "На главную"
+                },
+                "content-worker": {
+                    "function": "some_content_worker.functionname",
+                    "arguments": ["content"]
+                },
+                "buttons-worker": {
+                    "function": "some_buttons_worker.functionname",
+                    "arguments": ["buttons"]
+                }
+            },
+            "content-setter": { // Тут подразумевается, что мы ожидаем текст от юзера
+                "title": "Настройка поста",
+                "content": "Описание поста и тд...",
+                "to_pages": {
+                    "main-page": "На главную"
+                },
+                "content-worker": {
+                    "function": "some_content_worker.functionname",
+                    "arguments": ["content"]
+                },
+                "buttons-worker": {
+                    "function": "some_buttons_worker.functionname",
+                    "arguments": ["buttons"]
+                },
+                "text-waiter": ""
+            }
+        }
+    }
+
+}
