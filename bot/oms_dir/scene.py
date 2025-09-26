@@ -1,0 +1,194 @@
+from typing import Optional, Type
+from bot.modules.utils import list_to_inline
+from bot.oms_dir.models.scene import scenes_loader, SceneModel
+from bot.oms_dir.page import Page
+from bot.main import mainbot
+
+from aiogram.types import Message, CallbackQuery
+
+db = {}
+
+def update_db(user_id: int, data: dict):
+    global db
+
+    db[user_id] = data
+
+def get_from_db(user_id: int) -> dict:
+    global db
+    return db.get(user_id, {})
+
+
+CALLBACK_PREFIX = 'scene'
+CALLBACK_SEPARATOR = ':'
+
+def callback_generator(scene_name: str, c_type: str, *args):
+    """ prefix:type:name:*args
+    """
+    sep = CALLBACK_SEPARATOR
+    return f'{CALLBACK_PREFIX}{sep}{c_type}{sep}{scene_name}{sep}{":".join(args)}'
+
+class Scene:
+
+    __scenes_path__: str = "scenes"
+    __scene_name__: str = ''
+    __pages__: list[Type[Page]] = [] # Регистрация страниц сцены
+
+    def __init__(self, user_id: int):
+        self.user_id = user_id
+        self.message_id: int = 0
+
+        self.scene: SceneModel = scenes_loader.get_scene(
+            self.__scene_name__) # type: ignore
+
+        if not self.scene:
+            print(scenes_loader.scenes)
+            raise ValueError(f"Сцена {self.__scene_name__} не найдена")
+
+        self.pages = {
+            page.__page_name__: 
+                page(self.scene) for page in self.__pages__
+        }
+        self.page = self.start_page
+
+        if not self.scene:
+            raise ValueError(f"Сцена {self.__scene_name__} не найдена")
+
+    def __call__(self, *args, **kwargs):
+        # self.__init__(*args, **kwargs)
+        return self
+
+    @property
+    def start_page(self) -> str:
+        return list(self.scene.pages.keys())[0]
+
+    async def start(self):
+        await self.save_to_db()
+        await self.send_message()
+
+    # Это вызываем для получения данных
+    async def data_getter(self) -> None:
+        """ Функция для запроса данных у источника
+        """
+        pass
+
+    # Это вызываем для установки данных
+    async def data_setter(self, **kwargs) -> None:
+        """ Функция для установки данных в источник
+        """
+        pass
+
+    async def update_page(self, page_name: str):
+        print(
+            'from:', self.page,
+            'to:', page_name
+        )
+        self.page = page_name
+        await self.save_to_db()
+        await self.update_message()
+
+    def get_page(self, page_name: str):
+        return self.pages.get(page_name, None)
+
+    @property
+    def current_page(self) -> Page:
+        return self.pages.get(self.page, self.standart_page(self.page))
+
+    def standart_page(self, page_name: str) -> Page:
+        sp = Page(self.scene, page_name)
+        return sp
+
+    async def preparate_message_data(self):
+        page = self.current_page
+        text: str = await page.content_worker()
+        buttons: list[dict] = await page.buttons_worker()
+
+        to_pages: dict[str, str] = page.to_pages
+        for page_name, title in to_pages.items():
+            buttons.append({
+                'text': title,
+                'callback_data': callback_generator(self.__scene_name__, 
+                                                    'to_page', page_name)
+            })
+
+        inl_markup = list_to_inline(buttons)
+        return text, inl_markup
+
+    async def send_message(self):
+        content, markup = await self.preparate_message_data()
+
+        message = await mainbot.send_message(self.user_id, content, 
+                                             reply_markup=markup)
+        self.message_id = message.message_id
+        await self.save_to_db()
+
+    async def update_message(self):
+        content, markup = await self.preparate_message_data()
+
+        await mainbot.edit_message_text(
+            chat_id=self.user_id,
+            message_id=self.message_id,
+            text=content,
+            reply_markup=markup
+        )
+
+    async def save_to_db(self):
+
+        update_db(self.user_id, 
+                  {
+                      'page': self.page,
+                      'scene': self.__scene_name__,
+                      'message_id': self.message_id
+                  })
+
+    async def load_from_db(self):
+
+        data = get_from_db(self.user_id)
+        if not data: return
+
+        self.page = data.get('page', self.start_page)
+        self.message_id = data.get('message_id', 0)
+        self.scene: SceneModel = scenes_loader.get_scene(
+            self.__scene_name__) # type: ignore
+
+
+    async def text_handler(self, message: Message) -> None:
+        """Обработчик текстовых сообщений"""
+        page = self.current_page
+        await page.text_handler(message)
+
+    async def callback_handler(self, callback: CallbackQuery, args: list) -> None:
+        """Обработчик колбэков"""
+        page = self.current_page
+        await page.callback_handler(callback, args)
+
+
+    async def end(self):
+        await mainbot.delete_message(self.user_id, self.message_id)
+        manager.remove_scene(self.user_id)
+
+
+class SceneManager:
+    _instances = {}
+
+    @classmethod
+    def get_scene(cls, user_id: int) -> Optional[Scene]:
+        if not cls.has_scene(user_id): return None
+        return cls._instances[user_id]
+
+    @classmethod
+    def create_scene(cls, user_id: int, scene_class: Type[Scene]) -> Scene:
+        if user_id in cls._instances:
+            raise ValueError(f"Сцена для пользователя {user_id} уже существует")
+        cls._instances[user_id] = scene_class(user_id)
+        return cls._instances[user_id]
+
+    @classmethod
+    def remove_scene(cls, user_id: int):
+        if user_id in cls._instances:
+            del cls._instances[user_id]
+
+    @classmethod
+    def has_scene(cls, user_id: int) -> bool:
+        return user_id in cls._instances
+
+manager = SceneManager()
