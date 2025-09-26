@@ -3,20 +3,18 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import CommandStart
+from os import getenv
+from dotenv import load_dotenv
 
-
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
-
-
-bot = Bot(token=BOT_TOKEN)
+mainbot = Bot(token=getenv("BOT_TOKEN", ''))
 dp = Dispatcher()
 
-async def main():
-    print("Бот запускается...")
-    await dp.start_polling(bot)
+def run():
+    import bot.handlers
+    import bot.oms_dir.oms_handler
 
-if __name__ == "__main__":
-    asyncio.run(main())
+    print("Бот запущен")
+    asyncio.run(dp.start_polling(mainbot))
