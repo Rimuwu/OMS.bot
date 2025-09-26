@@ -7,58 +7,18 @@ import json
 class FunctionWorker:
     """Класс для описания функций-обработчиков"""
     function: Optional[str] = None
-    arguments: List[str] = field(default_factory=list)
-    return_fields: Optional[List[str]] = field(default_factory=list)
-
-
-@dataclass
-class DataGetter(FunctionWorker):
-    """Класс для описания функции получения данных"""
-    return_fields: List[str] = field(default_factory=list)
-
-    def __post_init__(self):
-        if hasattr(self, 'return'):
-            self.return_fields = getattr(self, 'return')
-
-
-@dataclass 
-class DataSetter(FunctionWorker):
-    """Класс для описания функции установки данных"""
-
-    arguments: List[str] = field(default_factory=list)
-
-    def __post_init__(self):
-        if hasattr(self, 'args'):
-            self.arguments = getattr(self, 'args')
-
 
 @dataclass
 class SceneSettings:
     """Настройки сцены"""
-    worker_class: Optional[str] = None
-    data_getter: Optional[DataGetter] = None
-    data_setter: Optional[DataSetter] = None
-    state: Optional[str] = None
+    # worker_class: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'SceneSettings':
         """Создание объекта из словаря"""
-        data_getter = None
-        if 'data-getter' in data:
-            getter_data = data['data-getter'].copy()
-            if 'return' in getter_data:
-                getter_data['return_fields'] = getter_data.pop('return')
-            data_getter = DataGetter(**getter_data)
-
-        data_setter = None
-        if 'data-setter' in data:
-            data_setter = DataSetter(**data['data-setter'])
 
         return cls(
-            worker_class=data.get('worker-class'),
-            data_getter=data_getter,
-            data_setter=data_setter,
-            state=data.get('state')
+            # worker_class=data.get('worker-class')
         )
 
 
@@ -94,14 +54,14 @@ class ScenePage:
 
 
 @dataclass
-class Scene:
+class SceneModel:
     """Основной класс сцены"""
     name: str
     settings: SceneSettings
     pages: Dict[str, ScenePage]
 
     @classmethod
-    def from_dict(cls, name: str, data: Dict[str, Any]) -> 'Scene':
+    def from_dict(cls, name: str, data: Dict[str, Any]) -> 'SceneModel':
         """Создание сцены из словаря"""
         settings = SceneSettings.from_dict(data['settings'])
 
@@ -129,7 +89,7 @@ class Scene:
 @dataclass
 class SceneLoader:
     """Класс для загрузки сцен из JSON"""
-    scenes: Dict[str, Scene] = field(default_factory=dict)
+    scenes: Dict[str, SceneModel] = field(default_factory=dict)
 
     def load_from_file(self, file_path: str) -> None:
         """Загрузка сцен из JSON файла"""
@@ -150,7 +110,7 @@ class SceneLoader:
 
             self.scenes.clear()
             for scene_name, scene_data in data.items():
-                self.scenes[scene_name] = Scene.from_dict(scene_name, scene_data)
+                self.scenes[scene_name] = SceneModel.from_dict(scene_name, scene_data)
 
         except FileNotFoundError:
             raise FileNotFoundError(f"Файл конфигурации сцен не найден: {file_path}")
@@ -159,14 +119,20 @@ class SceneLoader:
         except Exception as e:
             raise RuntimeError(f"Ошибка загрузки сцен: {e}")
 
-    def get_scene(self, scene_name: str) -> Optional[Scene]:
+    def get_scene(self, scene_name: str) -> Optional[SceneModel]:
         """Получение сцены по имени"""
         return self.scenes.get(scene_name)
 
-    def get_all_scenes(self) -> Dict[str, Scene]:
+    def get_all_scenes(self) -> Dict[str, SceneModel]:
         """Получение всех загруженных сцен"""
         return self.scenes.copy()
 
     def reload_from_file(self, file_path: str) -> None:
         """Перезагрузка сцен из файла"""
         self.load_from_file(file_path)
+
+scenes_loader = SceneLoader()
+scenes_loader.load_from_file('json/scenes.json')
+print(
+    "[SceneLoader] Loaded scenes: ", len(scenes_loader.scenes)
+)
