@@ -1,14 +1,9 @@
+from bot.main import run
 
+if __name__ == '__main__':
+    run()
 
-from bot.oms_dir.models.scene import SceneLoader
+# from bot.oms_dir.scene import manager
+# from bot.scenes.user_task.task_scene import TaskScene
 
-
-from pprint import pprint
-
-
-scene = SceneLoader()
-scene.load_from_file('json/scenes.json')
-
-pprint(
-    scene.get_scene('user-task').get_page('main-page').buttons_worker.function
-)
+# manager.create_scene(123, TaskScene)
