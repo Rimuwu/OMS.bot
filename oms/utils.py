@@ -37,7 +37,7 @@ def callback_generator(scene_name: str, c_type: str, *args):
     """ prefix:type:name:*args
     """
     sep = CALLBACK_SEPARATOR
-    return f'{CALLBACK_PREFIX}{sep}{c_type}{sep}{scene_name}{sep}{":".join(args)}'
+    return f'{CALLBACK_PREFIX}{sep}{c_type}{sep}{scene_name}{sep}{":".join(map(str, args))}'
 
 def use_inspect(func: callable, **kwargs) -> dict:
     """ Функция для вызова функции с учётом того, асинхронная она или нет
