@@ -132,7 +132,7 @@ class SceneLoader:
         self.load_from_file(file_path)
 
 scenes_loader = SceneLoader()
-scenes_loader.load_from_file('oms_dir/json/scenes.json')
+scenes_loader.load_from_file('oms/json/scenes.json')
 print(
     "[SceneLoader] Loaded scenes: ", len(scenes_loader.scenes)
 )
