@@ -124,7 +124,8 @@ class Scene:
         content, markup = await self.preparate_message_data()
 
         message = await self.__bot__.send_message(self.user_id, content, 
-                                             reply_markup=markup)
+                                        parse_mode=self.scene.settings.parse_mode,
+                                        reply_markup=markup)
         self.message_id = message.message_id
         await self.save_to_db()
 
@@ -135,6 +136,7 @@ class Scene:
             chat_id=self.user_id,
             message_id=self.message_id,
             text=content,
+            parse_mode=self.scene.settings.parse_mode,
             reply_markup=markup
         )
 
@@ -192,6 +194,11 @@ class Scene:
         """Обработчик текстовых сообщений"""
         page = self.current_page
         await page.text_handler(message)
+
+        if self.scene.settings.delete_after_send:
+            await self.__bot__.delete_message(
+                self.user_id, message.message_id
+            )
 
     async def callback_handler(self, 
                 callback: CallbackQuery, args: list) -> None:
