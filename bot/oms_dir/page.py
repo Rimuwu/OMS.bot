@@ -32,10 +32,10 @@ class Page:
         return self
 
     def get_pagedata(self):
-        pass
+        return self.scene.get_data(self.__page_name__)
 
-    def update_pagedata(self):
-        pass
+    def update_pagedata(self, data: dict) -> bool:
+        return self.scene.set_data(self.__page_name__, data)
 
     async def content_worker(self) -> str:
         return self.content

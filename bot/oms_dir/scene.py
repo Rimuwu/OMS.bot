@@ -189,7 +189,6 @@ class Scene:
             return True
         return False
 
-
     async def end(self):
         await mainbot.delete_message(self.user_id, self.message_id)
         manager.remove_scene(self.user_id)
