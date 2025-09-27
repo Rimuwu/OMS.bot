@@ -82,7 +82,7 @@ class Scene:
 
     async def update_page(self, page_name: str):
 
-        if page_name not in self.pages:
+        if page_name not in self.scene.pages:
             raise ValueError(f"Страница {page_name} не найдена в сцене {self.__scene_name__}")
 
         self.page = page_name
