@@ -1,6 +1,4 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-import inspect
-import asyncio
 
 CALLBACK_PREFIX = 'scene'
 CALLBACK_SEPARATOR = ':'
@@ -38,13 +36,3 @@ def callback_generator(scene_name: str, c_type: str, *args):
     """
     sep = CALLBACK_SEPARATOR
     return f'{CALLBACK_PREFIX}{sep}{c_type}{sep}{scene_name}{sep}{":".join(map(str, args))}'
-
-def use_inspect(func: callable, **kwargs) -> dict:
-    """ Функция для вызова функции с учётом того, асинхронная она или нет
-        kwargs - аргументы для передачи в функцию
-    """
-
-    if inspect.iscoroutinefunction(func):
-        return asyncio.create_task(func(**kwargs))
-    else:
-        return func(**kwargs)

@@ -4,7 +4,7 @@ from typing import Optional, Type
 from aiogram import Bot
 from aiogram.types import Message, CallbackQuery
 
-from ..utils import list_to_inline, callback_generator, use_inspect
+from ..utils import list_to_inline, callback_generator
 from ..manager import scene_manager
 from .json_scene import scenes_loader, SceneModel
 from .page import Page
@@ -165,20 +165,16 @@ class Scene:
 
         exist = await self.__load_function__(self.user_id)
         if not exist:
-            use_inspect(self.__insert_function__, 
-                        user_id=self.user_id, 
-                        data=self.data_to_save())
+            await self.__insert_function__(user_id=self.user_id, data=self.data_to_save())
         else:
-            use_inspect(self.__update_function__, 
-                        user_id=self.user_id, 
-                        data=self.data_to_save())
+            await self.__update_function__(user_id=self.user_id, data=self.data_to_save())
         return True
 
     async def load_from_db(self, update_page: bool) -> bool:
         if not self.__load_function__:
             return False
 
-        data = use_inspect(self.__load_function__, self.user_id)
+        data = await self.__load_function__(user_id=self.user_id)
         if not data:
             return False
 

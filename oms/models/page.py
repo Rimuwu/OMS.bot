@@ -4,7 +4,6 @@ import re
 
 from .json_scene import ScenePage, SceneModel
 from aiogram.types import Message, CallbackQuery
-from ..utils import use_inspect
 
 if TYPE_CHECKING:
     from .scene import Scene
@@ -205,14 +204,14 @@ class Page:
             parsed_value = self._parse_text(text, data_type, separator)
 
             if parsed_value is not None:
-                use_inspect(handler, message=message, value=parsed_value)
+                await handler(message=message, value=parsed_value)
                 handled = True
                 break
 
         # Если есть обработчик для 'all', вызываем его всегда
         if 'all' in self.__text_handlers__:
             handler = self.__text_handlers__['all']['handler']
-            use_inspect(handler, message=message)
+            await handler(message=message)
 
         # Если текст не был обработан, можно добавить обработку по умолчанию
         if not handled and 'all' not in self.__text_handlers__:
@@ -260,11 +259,11 @@ class Page:
         if args and args[0] in self.__callback_handlers__:
             callback_type = args[0]
             handler = self.__callback_handlers__[callback_type]
-            use_inspect(handler, callback=callback, args=args)
+            await handler(callback=callback, args=args)
 
         if 'all' in self.__callback_handlers__:
             handler = self.__callback_handlers__['all']
-            use_inspect(handler, callback=callback, args=args)
+            await handler(callback=callback, args=args)
 
 
 
