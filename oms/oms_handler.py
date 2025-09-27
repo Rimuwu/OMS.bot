@@ -57,4 +57,6 @@ def register_handlers(router: Type[Router]):
         prefix, c_type, scene_name, *args = callback.data.split(':')
 
         if user_session:
-            await user_session.callback_handler(callback, args)
+            # Передаем c_type как первый элемент args, остальные аргументы следом
+            callback_args = [c_type] + args
+            await user_session.callback_handler(callback, callback_args)
