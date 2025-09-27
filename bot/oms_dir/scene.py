@@ -1,5 +1,7 @@
-from typing import Optional, Type
+import asyncio
+from typing import Literal, Optional, Type
 from bot.modules.utils import list_to_inline
+from bot.oms_dir.manager import manager
 from bot.oms_dir.models.scene import scenes_loader, SceneModel
 from bot.oms_dir.page import Page
 from bot.main import mainbot
@@ -36,6 +38,9 @@ class Scene:
     def __init__(self, user_id: int):
         self.user_id = user_id
         self.message_id: int = 0
+        self.data: dict = {
+            'scene': {}
+        }
 
         self.scene: SceneModel = scenes_loader.get_scene(
             self.__scene_name__) # type: ignore
@@ -44,10 +49,15 @@ class Scene:
             print(scenes_loader.scenes)
             raise ValueError(f"Сцена {self.__scene_name__} не найдена")
 
-        self.pages = {
-            page.__page_name__: 
-                page(self.scene) for page in self.__pages__
-        }
+        self.pages = {}
+        for page in self.__pages__:
+            self.pages[
+                page.__page_name__
+            ] = page(self.scene, this_scene=self)
+            self.data[
+                page.__page_name__
+            ] = {}
+
         self.page = self.start_page
 
         if not self.scene:
@@ -94,7 +104,7 @@ class Scene:
         return self.pages.get(self.page, self.standart_page(self.page))
 
     def standart_page(self, page_name: str) -> Page:
-        sp = Page(self.scene, page_name)
+        sp = Page(self.scene, page_name, this_scene=self)
         return sp
 
     async def preparate_message_data(self):
@@ -162,33 +172,24 @@ class Scene:
         await page.callback_handler(callback, args)
 
 
+    def get_data(self, element: str) -> Optional[dict]:
+        """ Элементы - это страницы или сцена, то есть либо scene, либо название странц
+        """
+
+        if element in self.data:
+            return self.data[element]
+
+        return None
+
+    def set_data(self, element: str, value: dict) -> bool:
+
+        if element in self.data:
+            self.data[element] = value
+            asyncio.run(self.save_to_db())
+            return True
+        return False
+
+
     async def end(self):
         await mainbot.delete_message(self.user_id, self.message_id)
         manager.remove_scene(self.user_id)
-
-
-class SceneManager:
-    _instances = {}
-
-    @classmethod
-    def get_scene(cls, user_id: int) -> Optional[Scene]:
-        if not cls.has_scene(user_id): return None
-        return cls._instances[user_id]
-
-    @classmethod
-    def create_scene(cls, user_id: int, scene_class: Type[Scene]) -> Scene:
-        if user_id in cls._instances:
-            raise ValueError(f"Сцена для пользователя {user_id} уже существует")
-        cls._instances[user_id] = scene_class(user_id)
-        return cls._instances[user_id]
-
-    @classmethod
-    def remove_scene(cls, user_id: int):
-        if user_id in cls._instances:
-            del cls._instances[user_id]
-
-    @classmethod
-    def has_scene(cls, user_id: int) -> bool:
-        return user_id in cls._instances
-
-manager = SceneManager()
