@@ -1,4 +1,4 @@
-from bot.oms_dir.scene import Scene
+from oms import Scene
 from bot.scenes.user_task.channels_page import ChannelsPage
 
 class TaskScene(Scene):
@@ -7,6 +7,3 @@ class TaskScene(Scene):
     __pages__ = [
         ChannelsPage
     ]
-
-    def __init__(self, user_id: int):
-        super().__init__(user_id)
