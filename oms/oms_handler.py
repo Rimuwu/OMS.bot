@@ -1,5 +1,6 @@
-from typing import Type
+from typing import Union
 from aiogram.types import Message, CallbackQuery
+from aiogram import Dispatcher
 
 from .utils import CALLBACK_PREFIX
 from .manager import scene_manager
@@ -8,7 +9,7 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
-def register_handlers(router: Type[Router]):
+def register_handlers(router: Union[Router, Dispatcher]):
 
     @router.message()
     async def on_message(message: Message):
