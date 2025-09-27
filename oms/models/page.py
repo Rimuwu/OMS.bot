@@ -1,18 +1,19 @@
 from typing import TYPE_CHECKING, Optional
 
-from oms_dir.models.scene import ScenePage, SceneModel
+from .json_scene import ScenePage, SceneModel
 from aiogram.types import Message, CallbackQuery
-from utils import use_inspect
+from ..utils import use_inspect
 
 if TYPE_CHECKING:
-    from oms_dir.models.scene import Scene
+    from .scene import Scene
 
 class Page:
 
     __page_name__: str = ''
 
-    def __init__(self, scene: SceneModel, 
-                 this_scene: Scene,
+    def __init__(self, 
+                 scene: SceneModel, 
+                 this_scene: 'Scene',
                  page_name: str = ''):
         if page_name and not self.__page_name__: 
             self.__page_name__ = page_name

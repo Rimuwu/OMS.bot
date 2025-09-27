@@ -2,12 +2,12 @@ import asyncio
 from typing import Optional, Type
 
 from aiogram import Bot
-from oms_dir.utils import list_to_inline, callback_generator, use_inspect
-from oms_dir.manager import manager
-from oms_dir.models.scene import scenes_loader, SceneModel
-from oms_dir.models.page import Page
-
 from aiogram.types import Message, CallbackQuery
+
+from ..utils import list_to_inline, callback_generator, use_inspect
+from ..manager import scene_manager
+from .json_scene import scenes_loader, SceneModel
+from .page import Page
 
 class Scene:
 
@@ -96,7 +96,7 @@ class Scene:
         return self.pages.get(page_name, None)
 
     def standart_page(self, page_name: str) -> Page:
-        sp = Page(self.scene, page_name, this_scene=self)
+        sp = Page(self.scene, self, page_name)
         return sp
 
 
@@ -249,4 +249,4 @@ class Scene:
         await self.__bot__.delete_message(
             self.user_id, self.message_id
         )
-        manager.remove_scene(self.user_id)
+        scene_manager.remove_scene(self.user_id)

@@ -1,7 +1,8 @@
 from typing import Type
 from aiogram.types import Message, CallbackQuery
 
-from oms_dir.models.scene import manager, CALLBACK_PREFIX
+from .utils import CALLBACK_PREFIX
+from .manager import scene_manager
 from aiogram import F, Router
 from logging import getLogger
 
@@ -12,7 +13,7 @@ def register_handlers(router: Type[Router]):
     @router.message()
     async def on_message(message: Message):
         user_id = message.from_user.id
-        scene = manager.get_scene(user_id)
+        scene = scene_manager.get_scene(user_id)
 
         logger.info(
             f'on_message\nscene: {scene}\nmessage: {message.text}'
@@ -26,7 +27,7 @@ def register_handlers(router: Type[Router]):
                     )
     async def to_page(callback: CallbackQuery):
         user_id = callback.from_user.id
-        user_session = manager.get_scene(user_id)
+        user_session = scene_manager.get_scene(user_id)
 
         prefix, c_type, scene_name, *args = callback.data.split(':')
         to_page = args[0]
@@ -39,7 +40,7 @@ def register_handlers(router: Type[Router]):
     #                 )
     # async def scene_data(callback: CallbackQuery):
     #     user_id = callback.from_user.id
-    #     user_session = manager.get_scene(user_id)
+    #     user_session = scene_manager.get_scene(user_id)
 
     #     prefix, c_type, scene_name, *args = callback.data.split(':')
     #     to_page = args[0]
@@ -51,7 +52,7 @@ def register_handlers(router: Type[Router]):
         F.data.split(":")[0] == CALLBACK_PREFIX)
     async def on_callback_query(callback: CallbackQuery):
         user_id = callback.from_user.id
-        user_session = manager.get_scene(user_id)
+        user_session = scene_manager.get_scene(user_id)
 
         prefix, c_type, scene_name, *args = callback.data.split(':')
 
