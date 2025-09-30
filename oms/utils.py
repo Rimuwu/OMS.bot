@@ -1,4 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+import importlib
+
 
 CALLBACK_PREFIX = 'scene'
 CALLBACK_SEPARATOR = ':'
@@ -36,3 +38,14 @@ def callback_generator(scene_name: str, c_type: str, *args):
     """
     sep = CALLBACK_SEPARATOR
     return f'{CALLBACK_PREFIX}{sep}{c_type}{sep}{scene_name}{sep}{":".join(map(str, args))}'
+
+def func_to_str(func):
+    """Преобразует функцию в строку вида 'модуль.имя_функции'."""
+    return f"{func.__module__}.{func.__name__}"
+
+def str_to_func(func_path):
+    """Получает функцию по строке вида 'модуль.имя_функции'."""
+
+    module_name, func_name = func_path.rsplit('.', 1)
+    module = importlib.import_module(module_name)
+    return getattr(module, func_name)
