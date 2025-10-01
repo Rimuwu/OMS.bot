@@ -18,7 +18,8 @@
                 "image": "images/1.png",
                 "content": "Выберите каналы для отправки: {channels}",
                 "to_pages": {
-                    "main-page": "На главную"
+                    "main-page": "На главную",
+                    "content-setter": "Настройка контента"
                 }
             },
             "content-setter": { // Тут подразумевается, что мы ожидаем текст от юзера

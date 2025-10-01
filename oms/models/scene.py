@@ -44,7 +44,6 @@ class Scene:
             self.__scene_name__) # type: ignore
 
         if not self.scene:
-            print(scenes_loader.scenes)
             raise ValueError(f"Сцена {self.__scene_name__} не найдена")
 
         self.set_pages()
@@ -185,7 +184,6 @@ class Scene:
 
         # Если раньше было фото, а теперь нет, удаляем сообщение и отправляем новое
         if last_have_photo and not has_new_photo:
-            print("OMS: Раньше было фото, а теперь нет, пересоздаем сообщение")
             await self.__bot__.delete_message(self.user_id, self.message_id)
             await self.send_message()
             return
@@ -298,7 +296,6 @@ class Scene:
         await page.text_handler(message)
 
         if self.scene.settings.delete_after_send:
-            print("Delete message after send")
             await self.__bot__.delete_message(
                 self.user_id, message.message_id
             )
