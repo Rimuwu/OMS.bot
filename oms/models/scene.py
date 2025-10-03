@@ -1,9 +1,8 @@
 import asyncio
-from typing import Optional, Type
+from typing import Callable, Optional, Type
 
 from aiogram import Bot
-from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
-
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 from ..utils import list_to_inline, callback_generator, func_to_str, prepare_image
 from ..manager import scene_manager
 from .json_scene import scenes_loader, SceneModel
@@ -17,19 +16,19 @@ class Scene:
 
     # Функция для вставки сцены в БД
     # В функцию передаёт user_id: int, data: dict
-    __insert_function__: callable = None
+    __insert_function__: Optional[Callable] = None
 
     # Функция для загрузки сцены из БД
     # В функцию передаёт user_id: int, вернуть должна dict
-    __load_function__: callable = None
+    __load_function__: Optional[Callable] = None
 
     # Функция для обновления сцены в БД
     # В функцию передаёт user_id: int, data: dict
-    __update_function__: callable = None
+    __update_function__: Optional[Callable] = None
 
     # Функция для удаления сцены из БД
     # В функцию передаёт user_id: int
-    __delete_function__: callable = None
+    __delete_function__: Optional[Callable] = None
 
     def __init__(self, user_id: int, bot_instance: Bot):
         self.user_id = user_id
@@ -44,6 +43,7 @@ class Scene:
             self.__scene_name__) # type: ignore
 
         if not self.scene:
+            print(scenes_loader.scenes)
             raise ValueError(f"Сцена {self.__scene_name__} не найдена")
 
         self.set_pages()
@@ -115,7 +115,9 @@ class Scene:
     async def preparate_message_data(self,
                         only_buttons: bool = False):
         page = self.current_page
-        if only_buttons:
+        await page.data_preparate()
+
+        if not only_buttons:
             text: str = await page.content_worker()
         else: text = page.__page__.content
 
@@ -184,6 +186,7 @@ class Scene:
 
         # Если раньше было фото, а теперь нет, удаляем сообщение и отправляем новое
         if last_have_photo and not has_new_photo:
+            print("OMS: Раньше было фото, а теперь нет, пересоздаем сообщение")
             await self.__bot__.delete_message(self.user_id, self.message_id)
             await self.send_message()
             return
@@ -267,11 +270,12 @@ class Scene:
         if not self.__insert_function__ or not self.__update_function__:
             return False
 
-        exist = await self.__load_function__(self.user_id)
-        if not exist:
-            await self.__insert_function__(user_id=self.user_id, data=self.data_to_save())
-        else:
-            await self.__update_function__(user_id=self.user_id, data=self.data_to_save())
+        if self.__load_function__:
+            exist = await self.__load_function__(self.user_id)
+            if not exist:
+                await self.__insert_function__(user_id=self.user_id, data=self.data_to_save())
+            else:
+                await self.__update_function__(user_id=self.user_id, data=self.data_to_save())
         return True
 
     async def load_from_db(self, update_page: bool) -> bool:
@@ -296,6 +300,7 @@ class Scene:
         await page.text_handler(message)
 
         if self.scene.settings.delete_after_send:
+            print("Delete message after send")
             await self.__bot__.delete_message(
                 self.user_id, message.message_id
             )
