@@ -1,4 +1,4 @@
-from oms import Page
+from .page import Page
 
 class TextTypeScene(Page):
 
@@ -20,9 +20,6 @@ class TextTypeScene(Page):
         self.scene_key = self.__scene_key__
         self.next_page = self.__next_page__
 
-    async def content_worker(self) -> str:
-        return self.append_variables()
-
     @Page.on_text('str')
     async def handle_text(self, message, value: str):
         text = value.strip()
@@ -41,11 +38,14 @@ class TextTypeScene(Page):
         # Сохраняем текст в сцену
         self.scene.update_key(
             'scene',
-            self.__scene_key__, 
+            self.scene_key, 
             text
         )
 
         # Переходим к следующей странице
-        if self.__next_page__:
+        if self.next_page:
             await self.scene.update_page(
-                self.__next_page__)
+                self.next_page)
+        else:
+            self.clear_content()
+            await self.scene.update_message()
