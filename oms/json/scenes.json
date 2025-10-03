@@ -7,11 +7,11 @@
         },
         "pages": {
             "main-page": { // Название страницы
-                "image": "",
-                "content": "Описание задачи и тд...",
+                "content": "Описание задачи и тд... {text}",
                 "to_pages": { // Кнопки для перехода на другие страницы
                     "channels-settings": "Каналы для отправки", // id страницы: Название кнопки
-                    "content-setter": "Настройка контента"
+                    "content-setter": "Настройка контента",
+                    "text-type": "Ввести текст"
                 }
             },
             "channels-settings": {
@@ -28,6 +28,18 @@
                 "to_pages": {
                     "main-page": "На главную"
                 }
+            },
+            "text-type": {
+                "content": "Введите текст (макс длинна {max_length} символов) >",
+                "to_pages": {
+                    "main-page": "На главную"
+                },
+                "type": "text",
+
+                "max_length": 256,
+                "min_length": 10,
+                "scene_key": "text",
+                "next_page": "main-page"
             }
         }
     }
