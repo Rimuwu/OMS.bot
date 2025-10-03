@@ -1,3 +1,4 @@
+from typing import Optional
 from .models.page import Page
 from .models.text_page import TextTypeScene
 
@@ -5,7 +6,7 @@ page_type: dict[str] = {
     'text': TextTypeScene
 }
 
-def fast_page(page_type_str: str, 
+def fast_page(page_type_str: Optional[str], 
               page_name: str) -> type[Page]:
     """ Быстрый доступ к типам страниц по строковому идентификатору """
     base_cls = page_type.get(page_type_str, Page)
