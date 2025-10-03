@@ -85,7 +85,7 @@ class Scene:
                 self.data[page] = {}
 
             if page not in self.pages:
-                js_type = self.scene.pages[page].get('type')
+                js_type = self.scene.pages[page].type
                 page_type = fast_page(js_type, page)
 
                 self.pages[page] = page_type(
