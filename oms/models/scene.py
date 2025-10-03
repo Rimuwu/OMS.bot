@@ -3,6 +3,8 @@ from typing import Callable, Optional, Type
 
 from aiogram import Bot
 from aiogram.types import Message, CallbackQuery, InputMediaPhoto
+
+from ..fast_page import fast_page
 from ..utils import list_to_inline, callback_generator, func_to_str, prepare_image
 from ..manager import scene_manager
 from .json_scene import scenes_loader, SceneModel
@@ -69,7 +71,9 @@ class Scene:
         for page in self.__pages__:
             self.pages[
                 page.__page_name__
-            ] = page(self.scene, this_scene=self)
+            ] = page(
+                self.scene, this_scene=self
+            )
 
             if page.__page_name__ not in self.data:
                 self.data[
@@ -79,6 +83,14 @@ class Scene:
         for page in self.scene.pages.keys():
             if page not in self.data:
                 self.data[page] = {}
+
+            if page not in self.pages:
+                js_type = self.scene.pages[page].get('type')
+                page_type = fast_page(js_type, page)
+
+                self.pages[page] = page_type(
+                    self.scene, this_scene=self
+                    )
 
     @property
     def start_page(self) -> str:
