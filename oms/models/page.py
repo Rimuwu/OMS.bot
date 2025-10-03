@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 
+from .safe_formatter import SafeFormatter
+
 from ..utils import parse_text
 
 from .json_scene import ScenePage, SceneModel
@@ -18,6 +20,8 @@ class Page:
     def __after_init__(self):
         """ Метод вызывающийся сразу после инициализации страницы, но до переопределения атрибутов из json.
             Можно переопределить в подклассе
+            
+            В основном используется для установки значений по умолчанию
         """
         pass
 
@@ -34,13 +38,13 @@ class Page:
 
         self.__after_init__()
 
-        # Переопределяем атрибуты из json страницы.
-        # tags -> __tags__
-        for arg in self.__json_args__:
-            if hasattr(self.__page__, arg):
-                setattr(self, arg, 
-                        getattr(self.__page__, arg)
-                )
+        # Добавляем все данные из json страницы в атрибуты страницы
+
+        for key, value in self.__page__.json_data.items():
+            if key in self.__json_args__:
+                setattr(self, key, value)
+            else:
+                raise ValueError(f"Аргумент {key} не разрешен для переопределения в странице {self.__page_name__}")
 
         self.__callback_handlers__ = {}
         self.__text_handlers__ = {}
@@ -264,7 +268,7 @@ class Page:
         """
         if not content: content = self.content
 
-        formatter = string.Formatter()
+        formatter = SafeFormatter()
         field_names = set()
         for literal_text, field_name, format_spec, conversion in formatter.parse(content):
             if field_name:
@@ -277,12 +281,11 @@ class Page:
         )
         # Добавляем данные сцены
         variables.update(
-            {name: value for name, value in self.scene.data.items()}
+            {name: value for name, value in self.scene.data['scene'].items()}
         )
         # Добавляем | заменяем на переденные данные
         variables.update(kwargs)
-
-        return content.format(**variables)
+        return formatter.format(content, **variables)
 
 
     # МОЖНО И НУЖНО МЕНЯТЬ !
@@ -290,7 +293,7 @@ class Page:
     async def content_worker(self) -> str:
         """ Функция вызывающаяся для получения контента
         """
-        return self.content
+        return self.append_variables()
 
     async def buttons_worker(self) -> list[dict]:
         """ Функция вызывающаяся для получения кнопок
