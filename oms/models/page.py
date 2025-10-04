@@ -30,7 +30,7 @@ class Page:
         if page_name and not self.__page_name__: 
             self.__page_name__ = page_name
 
-        self.json_args = self.__json_args__
+        self.json_args = self.__json_args__ + ['row_width', 'enable_topages']
         self.__scene__: SceneModel = scene
         self.__page__: ScenePage = scene.pages.get(
             self.__page_name__) # type: ignore
