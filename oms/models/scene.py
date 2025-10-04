@@ -35,14 +35,14 @@ class Scene:
     def __init__(self, user_id: int, bot_instance: Bot):
         self.user_id = user_id
         self.message_id: int = 0
-        self.data: dict = {
-            'scene': {}
-        }
-
         self.__bot__ = bot_instance
 
         self.scene: SceneModel = scenes_loader.get_scene(
             self.__scene_name__) # type: ignore
+
+        self.data: dict = {
+            'scene': self.scene.standart_data
+        }
 
         if not self.scene:
             print(scenes_loader.scenes)
