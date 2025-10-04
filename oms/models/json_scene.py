@@ -13,6 +13,7 @@ class SceneSettings:
     """Настройки сцены"""
     parse_mode: Optional[str] = None
     delete_after_send: bool = False
+    start_page: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'SceneSettings':
@@ -20,7 +21,8 @@ class SceneSettings:
 
         return cls(
             parse_mode=data.get('parse_mode', None),
-            delete_after_send=data.get('delete_after_send', False)
+            delete_after_send=data.get('delete_after_send', False),
+            start_page=data.get('start_page', None)
         )
 
 
