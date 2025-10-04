@@ -1,9 +1,11 @@
-from typing import Optional
+from typing import Optional, Type, Union
 from .models.page import Page
 from .models.text_page import TextTypeScene
+from .models.int_page import IntTypeScene
 
-page_type: dict[str] = {
-    'text': TextTypeScene
+page_type: dict[str, Union[Page, Type[Page]]] = {
+    'text': TextTypeScene,
+    'int': IntTypeScene
 }
 
 def fast_page(page_type_str: Optional[str], 
