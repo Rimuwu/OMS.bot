@@ -14,24 +14,42 @@
                 "to_pages": { // Кнопки для перехода на другие страницы
                     "channels-settings": "Каналы для отправки", // id страницы: Название кнопки
                     "content-setter": "Настройка контента",
-                    "text-type": "Ввести текст"
-                }
+                    "text-type": "Ввести текст",
+                    "channels": "Выбрать каналы"
+                },
+                "row-width": 2 // Количество кнопок в ряду
             },
             "channels-settings": {
                 "image": "images/1.png",
-                "content": "Выберите каналы для отправки: {channels}",
+                "content": "Выберите каналы для отправки: {radio-type}",
                 "to_pages": {
                     "main-page": "На главную",
                     "content-setter": "Настройка контента"
                 },
 
                 "type": "radio",
+                "scene_key": "radio-type",
                 "options": { // Варианты для выбора
                     "channel-1": "Канал 1",
                     "channel-2": "Канал 2",
                     "channel-3": "Канал 3"
                 },
                 "default_value": "channel-3"
+            },
+            "channels": {
+                "content": "Выберите каналы для отправки111: {channels_dt}",
+                "to_pages": {
+                    "main-page": "На главную",
+                    "content-setter": "Настройка контента"
+                },
+
+                "type": "option",
+                "scene_key": "channels_dt",
+                "options": { // Варианты для выбора
+                    "channel-1": "Канал 1",
+                    "channel-2": "Канал 2",
+                    "channel-3": "Канал 3"
+                }
             },
             "content-setter": { // Тут подразумевается, что мы ожидаем текст от юзера
                 "image": "images/2.png",
