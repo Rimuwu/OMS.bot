@@ -1,13 +1,16 @@
 {
 
     "user-task": {
+        "standart_data": {
+            "radio-type": "channel-1"
+        },
         "settings": {
             "parse_mode": "Markdown",
             "delete_after_send": true // Удалять сообщение пользователя после отправки
         },
         "pages": {
             "main-page": { // Название страницы
-                "content": "Описание задачи и тд... {text}",
+                "content": "Описание задачи и тд... {text}\n\n{radio-type}",
                 "to_pages": { // Кнопки для перехода на другие страницы
                     "channels-settings": "Каналы для отправки", // id страницы: Название кнопки
                     "content-setter": "Настройка контента",
@@ -20,7 +23,15 @@
                 "to_pages": {
                     "main-page": "На главную",
                     "content-setter": "Настройка контента"
-                }
+                },
+
+                "type": "radio",
+                "options": { // Варианты для выбора
+                    "channel-1": "Канал 1",
+                    "channel-2": "Канал 2",
+                    "channel-3": "Канал 3"
+                },
+                "default_value": "channel-3"
             },
             "content-setter": { // Тут подразумевается, что мы ожидаем текст от юзера
                 "image": "images/2.png",
