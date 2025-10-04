@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from .safe_formatter import SafeFormatter
 
@@ -280,12 +280,21 @@ class Page:
         variables.update(
             {name: value for name, value in self.scene.data['scene'].items()}
         )
+        # Добавляем данные страницы
+        variables.update(
+            {name: value for name, value in self.scene.data[self.__page_name__].items()}
+        )
         # Добавляем | заменяем на переденные данные
         variables.update(kwargs)
         return formatter.format(content, **variables)
 
 
     # МОЖНО И НУЖНО МЕНЯТЬ !
+
+    def page_blocked(self):
+        """ Отвечает сцене, можно ли перейти на эту страницу
+        """
+        return True
 
     async def content_worker(self) -> str:
         """ Функция вызывающаяся для получения контента
@@ -299,5 +308,10 @@ class Page:
 
     async def data_preparate(self) -> None:
         """ Функция вызывающаяся для обработки до старта генерации страницы
+        """
+        pass
+
+    async def post_handle(self, h_type: Literal['text', 'button']) -> None:
+        """ Функция вызывающаяся после обработки текста / кнопки
         """
         pass
