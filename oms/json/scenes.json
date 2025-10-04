@@ -17,7 +17,7 @@
                     "text-type": "Ввести текст",
                     "channels": "Выбрать каналы"
                 },
-                "row-width": 2 // Количество кнопок в ряду
+                "row_width": 2 // Количество кнопок в ряду
             },
             "channels-settings": {
                 "image": "images/1.png",
