@@ -372,7 +372,6 @@ class Scene:
             Если ключа нет, он будет создан
             Аккуратно, value должен быть сериализуемым в JSON
         """
-        print(f"UPDATE KEY: {element} -> {key} = {value}")
         if element in self.data:
             if key in self.data[element]:
                 self.data[element][key] = value
