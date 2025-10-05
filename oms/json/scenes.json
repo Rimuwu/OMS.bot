@@ -48,8 +48,16 @@
                 "options": { // Варианты для выбора
                     "channel-1": "Канал 1",
                     "channel-2": "Канал 2",
-                    "channel-3": "Канал 3"
-                }
+                    "channel-3": "Канал 3",
+                    "channel-4": "Канал 4",
+                    "channel-5": "Канал 5",
+                    "channel-6": "Канал 6",
+                    "channel-7": "Канал 7",
+                    "channel-8": "Канал 8",
+                    "channel-9": "Канал 9",
+                    "channel-10": "Канал 10"
+                },
+                "max_on_page": 3
             },
             "content-setter": { // Тут подразумевается, что мы ожидаем текст от юзера
                 "image": "images/2.png",
