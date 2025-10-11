@@ -8,6 +8,7 @@ from ..utils import list_to_inline, callback_generator, func_to_str, prepare_ima
 from ..manager import scene_manager
 from .json_scene import scenes_loader, SceneModel
 from .page import Page
+import copy
 
 class Scene:
 
@@ -40,7 +41,7 @@ class Scene:
             self.__scene_name__) # type: ignore
 
         self.data: dict = {
-            'scene': self.scene.standart_data
+            'scene': copy.deepcopy(self.scene.standart_data)
         }
 
         if not self.scene:

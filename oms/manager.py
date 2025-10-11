@@ -2,6 +2,7 @@ import asyncio
 from typing import Optional, Type, TYPE_CHECKING
 from aiogram import Bot
 from .utils import str_to_func
+import copy
 
 if TYPE_CHECKING:
     from oms import Scene
@@ -58,7 +59,7 @@ class SceneManager:
         cls._instances[user_id].__dict__.update({
             'page': page,
             'message_id': message_id,
-            'data': data
+            'data': copy.deepcopy(data)
         })
 
         if update_message:
