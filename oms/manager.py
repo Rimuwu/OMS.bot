@@ -56,6 +56,7 @@ class SceneManager:
             user_id=user_id,
             bot_instance=bot_instance
         )
+
         cls._instances[user_id].__dict__.update({
             'page': page,
             'message_id': message_id,
