@@ -31,7 +31,7 @@ class Page:
             self.__page_name__ = page_name
 
         self.json_args = self.__json_args__ + [
-            'row_width', 'enable_topages'
+            'row_width', 'enable_topages', 'parse_mode'
             ]
         self.__scene__: SceneModel = scene
         self.__page__ = scene.pages.get(
@@ -44,6 +44,7 @@ class Page:
 
         self.row_width: int = 3 # Ширина ряда кнопок по умолчанию
         self.enable_topages: bool = True # Включены ли кнопки перехода по страницам
+        self.parse_mode: Optional[str] = None # Режим парсинга сообщений (Markdown, HTML и т.д.)
 
         # Добавляем все данные из json страницы в атрибуты страницы
         for key, value in self.__page__.json_data.items():
@@ -242,17 +243,23 @@ class Page:
         if args and args[0] in self.__callback_handlers__:
             callback_type = args[0]
             handler = self.__callback_handlers__[callback_type]
-            await handler(callback=callback, args=args)
+            res = await handler(callback=callback, args=args)
             handled = True
+
+            if res == 'exit': return
 
         if 'all' in self.__callback_handlers__:
             handler = self.__callback_handlers__['all']
-            await handler(callback=callback, args=args)
+            res = await handler(callback=callback, args=args)
+
+            if res == 'exit': return
 
         # Если текст не был обработан
         if not handled and 'not_handled' in self.__callback_handlers__:
             handler = self.__callback_handlers__['not_handled']
-            await handler(callback=callback, args=args)
+            res = await handler(callback=callback, args=args)
+
+            if res == 'exit': return
 
 
     # Служебные методы
@@ -326,3 +333,35 @@ class Page:
         """ Функция вызывающаяся после обработки текста / кнопки
         """
         pass
+
+    async def to_page_preworker(self, 
+                                to_page_buttons: dict
+                                ) -> dict:
+        """ Функция вызывающаяся перед формированием кнопок перехода по страницам
+            Позволяет модифицировать список кнопок перехода
+        """
+        return to_page_buttons
+    
+    async def post_buttons(self, 
+                           buttons: list[dict]
+                           ) -> list[dict]:
+        """ Функция вызывающаяся после формирования кнопок страницы
+        """
+        return buttons
+    
+    async def page_leave(self) -> None:
+        """ Функция вызывающаяся при выходе со страницы
+        """
+        pass
+
+    async def page_enter(self, **kwargs) -> None:
+        for key, value in kwargs.items():
+            await self.update_data(key, value)
+
+    def get_parse_mode(self) -> Optional[str]:
+        """ Получение parse_mode страницы с fallback на настройки сцены
+            Если parse_mode страницы None, используется parse_mode из настроек сцены
+        """
+        if self.parse_mode is not None:
+            return self.parse_mode
+        return self.__scene__.settings.parse_mode
