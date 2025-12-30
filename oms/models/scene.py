@@ -55,12 +55,16 @@ class Scene:
         if not self.scene:
             raise ValueError(f"Сцена {self.__scene_name__} не найдена")
 
+    @property
+    def bot(self) -> Bot:
+        return self.__bot__
+
     def __call__(self, *args, **kwargs):
         # self.__init__(*args, **kwargs)
         return self
 
     async def start(self):
-        await self.save_to_db()
+        await self.insert_to_db()
         await self.send_message()
 
 
@@ -79,8 +83,8 @@ class Scene:
                 self.data[
                     page.__page_name__
                 ] = {
-                    'last_button': '',
-                    'last_message': ''
+                    # 'last_button': '',
+                    # 'last_message': ''
                 }
 
         for page in self.scene.pages.keys():
@@ -106,17 +110,31 @@ class Scene:
     def current_page(self) -> Page:
         return self.pages.get(self.page, self.standart_page(self.page))
 
-    async def update_page(self, page_name: str):
+    async def update_page(self, page_name: str, **kwargs):
 
         if page_name not in self.scene.pages:
+            await self.__bot__.send_message(
+                self.user_id,
+                '❌ Ошибка получения станицы. Попробуйте войти в сцену заново.'
+            )
+            try:
+                await self.__bot__.delete_message(
+                    self.user_id,
+                    self.message_id
+                )
+                await self.end()
+            except Exception as e: pass
             raise ValueError(f"Страница {page_name} не найдена в сцене {self.__scene_name__}")
 
         page_model: Page = self.pages[page_name]
         status, answer = page_model.page_blocked()
         if status:
+            last_page = self.current_page
+            await last_page.page_leave()
 
             await self.update_key('scene', 'last_page', self.page)
             self.page = page_name
+            await self.current_page.page_enter(**kwargs)
 
             await self.save_to_db()
             await self.update_message()
@@ -149,26 +167,29 @@ class Scene:
         if not only_buttons:
             text: str = await page.content_worker()
         else: text = page.__page__.content
-        
-        if self.scene.settings.parse_mode == "Markdown":
+
+        parse_mode = page.get_parse_mode()
+        if parse_mode == "Markdown":
             text = self.clear_message_for_markdown(text)
 
         buttons: list[dict] = await page.buttons_worker()
 
         if page.enable_topages:
-            to_pages: dict[str, str] = page.to_pages
+            to_pages: dict[str, str] = await page.to_page_preworker(page.to_pages)
 
             for i, (page_name, title) in enumerate(
                 to_pages.items()):
                 buttons.append({
                     'text': title,
                     'callback_data': callback_generator(
-                    self.__scene_name__, 
-                    'to_page', page_name
+                        self.__scene_name__, 
+                        'to_page', page_name
                     ),
                     'next_line': len(buttons) > 0 and i == 0
                 })
 
+        buttons = await page.post_buttons(buttons)
+ 
         if not raw_buttons:
             inl_markup = list_to_inline(buttons, page.row_width)
         else:
@@ -188,7 +209,7 @@ class Scene:
                     self.user_id, 
                     prepared_image,
                     caption=content,
-                    parse_mode=self.scene.settings.parse_mode,
+                    parse_mode=page.get_parse_mode(),
                     reply_markup=markup
                 )
             else:
@@ -196,14 +217,14 @@ class Scene:
                 message = await self.__bot__.send_message(
                     self.user_id, 
                     content, 
-                    parse_mode=self.scene.settings.parse_mode,
+                    parse_mode=page.get_parse_mode(),
                     reply_markup=markup
                 )
         else:
             message = await self.__bot__.send_message(
                 self.user_id, 
                 content, 
-                parse_mode=self.scene.settings.parse_mode,
+                parse_mode=page.get_parse_mode(),
                 reply_markup=markup
             )
 
@@ -254,7 +275,7 @@ class Scene:
                         media=InputMediaPhoto(
                             media=prepared_image, 
                             caption=content,
-                            parse_mode=self.scene.settings.parse_mode
+                            parse_mode=page.get_parse_mode()
                             ),
                         reply_markup=markup
                     )
@@ -265,7 +286,7 @@ class Scene:
                         chat_id=self.user_id,
                         message_id=self.message_id,
                         text=content,
-                        parse_mode=self.scene.settings.parse_mode,
+                        parse_mode=page.get_parse_mode(),
                         reply_markup=markup
                     )
             else:
@@ -273,13 +294,13 @@ class Scene:
                     chat_id=self.user_id,
                     message_id=self.message_id,
                     text=content,
-                    parse_mode=self.scene.settings.parse_mode,
+                    parse_mode=page.get_parse_mode(),
                     reply_markup=markup
                 )
 
         except Exception as e:
             if "message is not modified" in str(e):
-                print("OMS: Сообщение не изменилось, пропускаем обновление")
+                # print("OMS: Сообщение не изменилось, пропускаем обновление")
                 return
 
             print(f"OMS: Ошибка при обновлении сообщения: {e}")
@@ -326,19 +347,27 @@ class Scene:
         self.scene: SceneModel = scenes_loader.get_scene(
             self.__scene_name__) # type: ignore
 
+    async def insert_to_db(self) -> bool:
+        if not self.__insert_function__:
+            return False
+
+        await self.__insert_function__(user_id=self.user_id, data=self.data_to_save())
+        return True
+
     async def save_to_db(self) -> bool:
+        # stack = traceback.extract_stack()
+        # caller = stack[-2]
+        # print(f"[save_to_db] Вызовов из: {caller.filename}:{caller.lineno} в {caller.name}")
+        
         if not self.__insert_function__ or not self.__update_function__:
             return False
 
-        if self.__load_function__:
-            exist = await self.__load_function__(self.user_id)
-            if not exist:
-                await self.__insert_function__(user_id=self.user_id, data=self.data_to_save())
-            else:
-                await self.__update_function__(user_id=self.user_id, data=self.data_to_save())
+        if self.__update_function__:
+            await self.__update_function__(user_id=self.user_id, data=self.data_to_save())
         return True
 
-    async def load_from_db(self, update_page: bool) -> bool:
+    async def load_from_db(self, 
+                           update_page: bool) -> bool:
         if not self.__load_function__:
             return False
 
@@ -367,7 +396,7 @@ class Scene:
                 )
             except Exception as e: pass
 
-        await self.update_key(page.__page_name__, 'last_message', message.text)
+        # await self.update_key(page.__page_name__, 'last_message', message.text)
         await page.post_handle('text')
 
     async def callback_handler(self, 
@@ -376,7 +405,7 @@ class Scene:
         page = self.current_page
         await page.callback_handler(callback, args)
 
-        await self.update_key(page.__page_name__, 'last_button', callback.data)
+        # await self.update_key(page.__page_name__, 'last_button', callback.data)
         await page.post_handle('button')
 
 
@@ -407,11 +436,14 @@ class Scene:
             Если ключа нет, он будет создан
             Аккуратно, value должен быть сериализуемым в JSON
         """
+
         if element in self.data:
             if key in self.data[element]:
-                self.data[element][key] = value
+                self.data[element][key] = value.copy() if (
+                    isinstance(value, dict) or isinstance(value, list)) else value
             else:
-                self.data[element][key] = value
+                self.data[element][key] = value.copy() if (
+                    isinstance(value, dict) or isinstance(value, list)) else value
             await self.save_to_db()
             return True
         return False
