@@ -12,23 +12,52 @@ logger = getLogger(__name__)
 
 def register_handlers(router: Union[Router, Dispatcher]):
 
+    @router.message(InScene(), F.photo)
+    async def on_photo_message(message: Message):
+        """Обработчик фото-сообщений в сцене"""
+        user_id = message.from_user.id
+        scene = scene_manager.get_scene(user_id)
+        logger.info(f"[OMS] on_photo_message called for user {user_id}, scene={scene is not None}")
+
+        if message.chat.id == user_id:
+            if scene:
+                logger.info(f"[OMS] Calling scene.text_handler for photo")
+                await scene.text_handler(message)
+
+    @router.message(InScene(), F.document)
+    async def on_document_message(message: Message):
+        """Обработчик документов в сцене"""
+        user_id = message.from_user.id
+        scene = scene_manager.get_scene(user_id)
+
+        if message.chat.id == user_id:
+            if scene:
+                await scene.text_handler(message)
+
+    @router.message(InScene(), F.video)
+    async def on_video_message(message: Message):
+        """Обработчик видео в сцене"""
+        user_id = message.from_user.id
+        scene = scene_manager.get_scene(user_id)
+
+        if message.chat.id == user_id:
+            if scene:
+                await scene.text_handler(message)
+
     @router.message(InScene())
     async def on_message(message: Message):
         user_id = message.from_user.id
-        if message.chat.id != user_id: return
-
         scene = scene_manager.get_scene(user_id)
-        logger.info(
-            f'on_message\nscene: {scene}\nmessage: {message.text}'
-        )
 
-        if scene:
-            await scene.text_handler(message)
+        if message.chat.id == user_id:
+
+            if scene:
+                await scene.text_handler(message)
 
     @router.callback_query(
         InScene(),
         F.data.split(":")[:2] == [CALLBACK_PREFIX, 'to_page']
-                    )
+    )
     async def to_page(callback: CallbackQuery):
         user_id = callback.from_user.id
         user_session = scene_manager.get_scene(user_id)
